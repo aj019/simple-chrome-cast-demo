@@ -2,6 +2,7 @@
   <head>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
       .video-container {
         display: flex;
@@ -78,7 +79,7 @@
         <span class="media-type">Image</span>
       </div>
       <div class="media-item" data-media="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" data-type="hls">
-        <img src="https://via.placeholder.com/300x169.png?text=HLS+Stream" alt="HLS BipBop Stream">
+        
         <h3>HLS BipBop Stream</h3>
         <span class="media-type">HLS</span>
       </div>
@@ -211,12 +212,28 @@
     });
 
     var hlsPlayer = document.getElementById('hlsPlayer');
+    var hls;
 
     function playHlsLocally(url) {
+      if (hls) {
+        hls.destroy();
+      }
+
       if (hlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
         hlsPlayer.src = url;
-        hlsPlayer.play().catch(error => {
-          console.log("Autoplay was prevented, user interaction is likely required.", error);
+        hlsPlayer.addEventListener('loadedmetadata', function() {
+          hlsPlayer.play().catch(error => {
+            console.log("Autoplay was prevented, user interaction is likely required.", error);
+          });
+        });
+      } else if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(hlsPlayer);
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          hlsPlayer.play().catch(error => {
+            console.log("Autoplay was prevented, user interaction is likely required.", error);
+          });
         });
       }
     }

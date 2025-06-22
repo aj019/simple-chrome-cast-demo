@@ -2,7 +2,8 @@
   <head>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <style>
       .video-container {
         display: flex;
@@ -55,7 +56,16 @@
     <div style="margin: 20px;">
       <h2>HLS Player</h2>
       <p>This player will show an AirPlay button on iOS yes.</p>
-      <video id="hlsPlayer" style="width: 100%; max-width: 600px;" controls playsinline autoplay muted></video>
+      <video
+        id="hlsPlayer"
+        class="video-js vjs-default-skin"
+        controls
+        autoplay
+        muted
+        playsinline
+        style="width: 100%; max-width: 600px;"
+        data-setup='{}'>
+      </video>
     </div>
     <div class="video-container">
       <div class="media-item" data-media="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-type="video">
@@ -211,31 +221,14 @@
       }
     });
 
-    var hlsPlayer = document.getElementById('hlsPlayer');
-    var hls;
+    var player = videojs('hlsPlayer');
 
     function playHlsLocally(url) {
-      if (hls) {
-        hls.destroy();
-      }
-
-      if (hlsPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-        hlsPlayer.src = url;
-        hlsPlayer.addEventListener('loadedmetadata', function() {
-          hlsPlayer.play().catch(error => {
-            console.log("Autoplay was prevented, user interaction is likely required.", error);
-          });
-        });
-      } else if (Hls.isSupported()) {
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(hlsPlayer);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-          hlsPlayer.play().catch(error => {
-            console.log("Autoplay was prevented, user interaction is likely required.", error);
-          });
-        });
-      }
+      player.src({
+        src: url,
+        type: 'application/x-mpegURL'
+      });
+      player.play();
     }
 
     playHlsLocally('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');

@@ -2,6 +2,7 @@
   <head>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
       .video-container {
         display: flex;
@@ -51,6 +52,11 @@
       <button id="nextVideo" disabled>Next</button>
       <button id="stopCast" disabled>Stop Casting</button>
     </div>
+    <div style="margin: 20px;">
+      <h2>HLS Player</h2>
+      <p>This player will show an AirPlay button on iOS devices.</p>
+      <video id="hlsPlayer" style="width: 100%; max-width: 600px;" controls></video>
+    </div>
     <div class="video-container">
       <div class="media-item" data-media="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-type="video">
         <img src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg" alt="Big Buck Bunny">
@@ -71,6 +77,11 @@
         <img src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg" alt="For Bigger Escapes">
         <h3>For Bigger Escapes Image</h3>
         <span class="media-type">Image</span>
+      </div>
+      <div class="media-item" data-media="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" data-type="hls">
+        <img src="https://via.placeholder.com/300x169.png?text=HLS+Stream" alt="HLS BipBop Stream">
+        <h3>HLS BipBop Stream</h3>
+        <span class="media-type">HLS</span>
       </div>
     </div>
   </body>
@@ -131,9 +142,22 @@
       if (!currentSession) return;
       
       const currentMedia = mediaItems[currentMediaIndex];
+      let contentType;
+      switch (currentMedia.type) {
+        case 'video':
+          contentType = 'video/mp4';
+          break;
+        case 'hls':
+          contentType = 'application/vnd.apple.mpegurl';
+          break;
+        case 'image':
+        default:
+          contentType = 'image/jpeg';
+          break;
+      }
       const mediaInfo = new chrome.cast.media.MediaInfo(
         currentMedia.url,
-        currentMedia.type === 'video' ? 'video/mp4' : 'image/jpeg'
+        contentType
       );
       
       const request = new chrome.cast.media.LoadRequest(mediaInfo);
@@ -181,5 +205,15 @@
         chrome.cast.requestSession(onSessionRequestSuccess, onError);
       }
     });
+
+    var video = document.getElementById('hlsPlayer');
+    var hlsUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+    if (Hls.isSupported()) {
+      var hls = new Hls();
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hlsUrl;
+    }
   </script>
 </html>

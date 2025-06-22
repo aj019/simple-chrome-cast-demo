@@ -55,7 +55,7 @@
     <div style="margin: 20px;">
       <h2>HLS Player</h2>
       <p>This player will show an AirPlay button on iOS devices.</p>
-      <video id="hlsPlayer" style="width: 100%; max-width: 600px;" controls></video>
+      <video id="hlsPlayer" style="width: 100%; max-width: 600px;" controls playsinline autoplay muted></video>
     </div>
     <div class="video-container">
       <div class="media-item" data-media="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-type="video">
@@ -199,12 +199,30 @@
 
     $(".media-item").click(function() {
       currentMediaIndex = $(this).index();
+      const currentMedia = mediaItems[currentMediaIndex];
       if (currentSession) {
         playCurrentMedia();
       } else {
-        chrome.cast.requestSession(onSessionRequestSuccess, onError);
+        if (currentMedia.type === 'hls') {
+          playHlsLocally(currentMedia.url);
+        } else {
+          chrome.cast.requestSession(onSessionRequestSuccess, onError);
+        }
       }
     });
+
+    function playHlsLocally(url) {
+      var video = document.getElementById('hlsPlayer');
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        video.play();
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.play();
+      }
+    }
 
     var video = document.getElementById('hlsPlayer');
     var hlsUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
